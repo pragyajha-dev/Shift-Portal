@@ -46,44 +46,97 @@ public static class ProjectEndpoints
             using var workbook = new XLWorkbook();
             var sheet = workbook.Worksheets.Add("Projects");
 
-            string[] headers = ["Project Name", "Side", "Environment", "URL", "Credential Role", "Username", "Password"];
+            // Side-by-side column groups (OutSystems vs. Pro Code) instead of an interleaved
+            // "Side" column — personas are shared across both sides (see the Add/Edit form),
+            // so one row per persona × environment name reads far cleaner than one row per
+            // raw credential with a side label repeated down a single column.
+            string[] headers =
+            [
+                "Project Name", "Persona", "Environment",
+                "OutSystems URL", "OutSystems Username", "OutSystems Password",
+                "Pro Code URL", "Pro Code Username", "Pro Code Password",
+            ];
+            var outSystemsFill = XLColor.FromHtml("#E2E8F0");
+            var proCodeFill = XLColor.FromHtml("#E0E7FF");
             for (var i = 0; i < headers.Length; i++)
             {
-                sheet.Cell(1, i + 1).Value = headers[i];
-                sheet.Cell(1, i + 1).Style.Font.Bold = true;
+                var cell = sheet.Cell(1, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Font.Bold = true;
+                if (i is 3 or 4 or 5) cell.Style.Fill.BackgroundColor = outSystemsFill;
+                else if (i is 6 or 7 or 8) cell.Style.Fill.BackgroundColor = proCodeFill;
             }
 
             var row = 2;
             foreach (var project in projects.OrderBy(p => p.Name))
             {
-                if (project.Environments.Count == 0)
+                var outEnvs = project.Environments.Where(e => e.Side == EnvironmentSide.OutSystems).OrderBy(e => e.SortOrder).ToList();
+                var proEnvs = project.Environments.Where(e => e.Side == EnvironmentSide.NewApp).OrderBy(e => e.SortOrder).ToList();
+
+                if (outEnvs.Count == 0 && proEnvs.Count == 0)
                 {
                     sheet.Cell(row, 1).Value = project.Name;
                     row++;
                     continue;
                 }
 
-                foreach (var env in project.Environments.OrderBy(e => e.Side).ThenBy(e => e.SortOrder))
-                {
-                    if (env.Credentials.Count == 0)
-                    {
-                        sheet.Cell(row, 1).Value = project.Name;
-                        sheet.Cell(row, 2).Value = env.Side.ToString();
-                        sheet.Cell(row, 3).Value = env.Name;
-                        sheet.Cell(row, 4).Value = env.Url;
-                        row++;
-                        continue;
-                    }
+                var outByName = new Dictionary<string, ProjectEnvironment>(StringComparer.OrdinalIgnoreCase);
+                foreach (var e in outEnvs) outByName[e.Name] = e;
+                var proByName = new Dictionary<string, ProjectEnvironment>(StringComparer.OrdinalIgnoreCase);
+                foreach (var e in proEnvs) proByName[e.Name] = e;
 
-                    foreach (var cred in env.Credentials.OrderBy(c => c.SortOrder))
+                var envNames = outEnvs.Select(e => e.Name)
+                    .Concat(proEnvs.Select(e => e.Name))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var personas = project.Environments
+                    .SelectMany(e => e.Credentials.Select(c => c.RoleLabel))
+                    .Distinct()
+                    .ToList();
+
+                // No credentials recorded anywhere yet: still list each environment's URL.
+                if (personas.Count == 0)
+                {
+                    foreach (var envName in envNames)
                     {
                         sheet.Cell(row, 1).Value = project.Name;
-                        sheet.Cell(row, 2).Value = env.Side.ToString();
-                        sheet.Cell(row, 3).Value = env.Name;
-                        sheet.Cell(row, 4).Value = env.Url;
-                        sheet.Cell(row, 5).Value = cred.RoleLabel;
-                        sheet.Cell(row, 6).Value = cred.Username;
-                        sheet.Cell(row, 7).Value = encryption.Decrypt(cred.PasswordEncrypted);
+                        sheet.Cell(row, 3).Value = envName;
+                        if (outByName.TryGetValue(envName, out var oEnv)) sheet.Cell(row, 4).Value = oEnv.Url;
+                        if (proByName.TryGetValue(envName, out var pEnv)) sheet.Cell(row, 7).Value = pEnv.Url;
+                        row++;
+                    }
+                    continue;
+                }
+
+                foreach (var persona in personas)
+                {
+                    foreach (var envName in envNames)
+                    {
+                        sheet.Cell(row, 1).Value = project.Name;
+                        sheet.Cell(row, 2).Value = persona;
+                        sheet.Cell(row, 3).Value = envName;
+
+                        if (outByName.TryGetValue(envName, out var oEnv))
+                        {
+                            sheet.Cell(row, 4).Value = oEnv.Url;
+                            var oCred = oEnv.Credentials.FirstOrDefault(c => c.RoleLabel == persona);
+                            if (oCred is not null)
+                            {
+                                sheet.Cell(row, 5).Value = oCred.Username;
+                                sheet.Cell(row, 6).Value = encryption.Decrypt(oCred.PasswordEncrypted);
+                            }
+                        }
+                        if (proByName.TryGetValue(envName, out var pEnv))
+                        {
+                            sheet.Cell(row, 7).Value = pEnv.Url;
+                            var pCred = pEnv.Credentials.FirstOrDefault(c => c.RoleLabel == persona);
+                            if (pCred is not null)
+                            {
+                                sheet.Cell(row, 8).Value = pCred.Username;
+                                sheet.Cell(row, 9).Value = encryption.Decrypt(pCred.PasswordEncrypted);
+                            }
+                        }
                         row++;
                     }
                 }
@@ -94,7 +147,7 @@ public static class ProjectEndpoints
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
 
-            var fileName = $"shift-portal-projects-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
+            var fileName = $"legacy2next-projects-{DateTime.UtcNow:yyyy-MM-dd}.xlsx";
             return Results.File(
                 stream.ToArray(),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

@@ -51,6 +51,11 @@ export interface PagedResult<T> {
 
 export type EnvironmentSide = 'OutSystems' | 'NewApp'
 
+export const SIDE_LABELS: Record<EnvironmentSide, string> = {
+  OutSystems: 'OutSystems Details',
+  NewApp: 'Pro Code Details',
+}
+
 export interface CredentialDetail {
   id: string
   roleLabel: string
