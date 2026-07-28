@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  Admin
+  Viewer
+}
+
+enum EnvironmentSide {
+  OutSystems
+  NewApp
+}
+
+model User {
+  id                 String    @id @default(uuid()) @map("Id")
+  fullName           String    @map("FullName")
+  email              String    @unique @map("Email")
+  passwordHash       String    @map("PasswordHash")
+  role               UserRole  @map("Role")
+  mustChangePassword Boolean   @default(false) @map("MustChangePassword")
+  isActive           Boolean   @default(true) @map("IsActive")
+  createdAt          DateTime  @default(now()) @map("CreatedAt")
+  createdByUserId    String?   @map("CreatedByUserId")
+  lastLoginAt        DateTime? @map("LastLoginAt")
+
+  createdByUser User?  @relation("UserCreatedBy", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdUsers  User[] @relation("UserCreatedBy")
+
+  createdProjects Project[] @relation("ProjectCreatedBy")
+  updatedProjects Project[] @relation("ProjectUpdatedBy")
+
+  @@map("Users")
+}
+
+model Project {
+  id              String    @id @default(uuid()) @map("Id")
+  name            String    @map("Name")
+  createdByUserId String    @map("CreatedByUserId")
+  createdAt       DateTime  @default(now()) @map("CreatedAt")
+  updatedByUserId String?   @map("UpdatedByUserId")
+  updatedAt       DateTime? @map("UpdatedAt")
+
+  createdByUser User  @relation("ProjectCreatedBy", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedByUser User? @relation("ProjectUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  environments Environment[]
+
+  @@map("Projects")
+}
+
+// Named "Environment" here (Prisma has no System.Environment collision like C# did);
+// still maps to the "Environments" table for consistency with the original schema.
+model Environment {
+  id        String          @id @default(uuid()) @map("Id")
+  projectId String          @map("ProjectId")
+  side      EnvironmentSide @map("Side")
+  name      String          @map("Name")
+  url       String          @map("Url")
+  sortOrder Int             @default(0) @map("SortOrder")
+  createdAt DateTime        @default(now()) @map("CreatedAt")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  credentials Credential[]
+
+  @@map("Environments")
+}
+
+model Credential {
+  id                String   @id @default(uuid()) @map("Id")
+  environmentId     String   @map("EnvironmentId")
+  roleLabel         String   @map("RoleLabel")
+  username          String   @map("Username")
+  passwordEncrypted String   @map("PasswordEncrypted")
+  sortOrder         Int      @default(0) @map("SortOrder")
+  createdAt         DateTime @default(now()) @map("CreatedAt")
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@map("Credentials")
+}
