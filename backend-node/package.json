@@ -2,11 +2,10 @@
   "name": "backend-node",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/src/index.js",
+    "build:local": "tsc",
+    "start:local": "node dist/src/index.js",
     "postinstall": "prisma generate",
     "test": "vitest run"
   },
