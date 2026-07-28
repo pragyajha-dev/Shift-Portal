@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { ArrowLeftRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,10 +35,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="glass-panel w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 rounded-2xl p-8 duration-500">
-        <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 shadow-md shadow-indigo-500/30">
-          <ArrowLeftRight className="size-5 text-white" />
-        </div>
-        <h1 className="mt-4 text-xl font-semibold text-slate-900">Shift Portal</h1>
+        <h1 className="text-xl font-semibold text-slate-900">Legacy2Next</h1>
         <p className="mt-1 text-sm text-slate-500">Sign in to continue</p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>

@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { authApi } from './api'
 import type { UserMe } from './types'
 
-const TOKEN_STORAGE_KEY = 'shiftportal.token'
+const TOKEN_STORAGE_KEY = 'legacy2next.token'
 
 interface AuthContextValue {
   token: string | null

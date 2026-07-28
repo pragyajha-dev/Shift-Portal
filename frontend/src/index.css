@@ -168,3 +168,61 @@ body {
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   border-bottom: 1px solid color-mix(in oklch, white 60%, transparent);
 }
+
+.glass-sidebar {
+  background: color-mix(in oklch, white 62%, transparent);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-right: 1px solid color-mix(in oklch, white 60%, transparent);
+}
+
+/* Greeting banner: animated "legacy → next" transition motif. */
+@keyframes travel-dot {
+  0% {
+    left: -3px;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 3px);
+    opacity: 0;
+  }
+}
+.travel-dot {
+  animation: travel-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.6 0.24 300 / 45%);
+  }
+  50% {
+    box-shadow: 0 0 0 8px oklch(0.6 0.24 300 / 0%);
+  }
+}
+.glow-pulse {
+  animation: glow-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes float-blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(10px, -12px) scale(1.08);
+  }
+}
+.float-blob {
+  animation: float-blob 6s ease-in-out infinite;
+}
+.float-blob-delayed {
+  animation: float-blob 7s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
