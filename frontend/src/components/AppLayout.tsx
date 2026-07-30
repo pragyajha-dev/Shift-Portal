@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { Archive, Rocket } from 'lucide-react'
+import { Archive, ArrowRight, Rocket } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
 import { useAuth } from '@/lib/auth-context'
 
@@ -10,16 +10,14 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function TravelDots() {
+// A static connector, not animated — motion here read as a loading spinner
+// rather than a design element.
+function LegacyToNextConnector() {
   return (
-    <div className="relative mx-3 h-0.5 flex-1 max-w-xs overflow-hidden rounded-full bg-gradient-to-r from-slate-300 via-indigo-300 to-violet-400">
-      {[0, 0.6, 1.2].map((delay) => (
-        <span
-          key={delay}
-          className="travel-dot absolute top-1/2 size-2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_6px_2px_rgba(99,102,241,0.6)]"
-          style={{ animationDelay: `${delay}s` }}
-        />
-      ))}
+    <div className="relative mx-3 flex h-px flex-1 max-w-xs items-center bg-gradient-to-r from-slate-300 via-indigo-300 to-violet-400">
+      <div className="absolute left-1/2 flex size-5 -translate-x-1/2 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-indigo-200/70">
+        <ArrowRight className="size-3 text-indigo-500" />
+      </div>
     </div>
   )
 }
@@ -51,7 +49,7 @@ export function AppLayout() {
               <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Legacy</span>
             </div>
 
-            <TravelDots />
+            <LegacyToNextConnector />
 
             <div className="glow-pulse flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 px-3 py-1.5 shadow-md shadow-indigo-500/30">
               <Rocket className="size-3.5 text-white" />

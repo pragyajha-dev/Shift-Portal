@@ -176,27 +176,6 @@ body {
   border-right: 1px solid color-mix(in oklch, white 60%, transparent);
 }
 
-/* Greeting banner: animated "legacy → next" transition motif. */
-@keyframes travel-dot {
-  0% {
-    left: -3px;
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  88% {
-    opacity: 1;
-  }
-  100% {
-    left: calc(100% - 3px);
-    opacity: 0;
-  }
-}
-.travel-dot {
-  animation: travel-dot 1.8s ease-in-out infinite;
-}
-
 @keyframes glow-pulse {
   0%,
   100% {
