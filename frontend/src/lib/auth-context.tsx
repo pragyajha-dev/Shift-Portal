@@ -3,6 +3,7 @@ import { authApi } from './api'
 import type { UserMe } from './types'
 
 const TOKEN_STORAGE_KEY = 'legacy2next.token'
+export const SESSION_EXPIRED_FLAG = 'legacy2next.sessionExpired'
 
 interface AuthContextValue {
   token: string | null
@@ -60,6 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null)
     setUser(null)
   }, [])
+
+  // Any API call that comes back 401 (expired/invalid token) dispatches this —
+  // without it, the app just left users stuck on a broken page showing a raw
+  // "Unauthorized" error instead of sending them back to log in.
+  useEffect(() => {
+    function handleUnauthorized() {
+      sessionStorage.setItem(SESSION_EXPIRED_FLAG, '1')
+      logout()
+    }
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [logout])
 
   const completePasswordChange = useCallback((newToken: string, newUser: UserMe) => {
     localStorage.setItem(TOKEN_STORAGE_KEY, newToken)

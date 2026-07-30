@@ -52,6 +52,15 @@ async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise
     } catch {
       // response had no JSON body
     }
+
+    // A 401 on any authenticated request (not just the initial session check)
+    // means the token is invalid or expired — without this, the app just shows
+    // a raw "Unauthorized" error inline and leaves the user stuck on a broken
+    // page instead of sending them back to log in.
+    if (res.status === 401 && options.token) {
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+    }
+
     throw new ApiError(message, res.status)
   }
 
